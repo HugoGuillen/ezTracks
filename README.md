@@ -30,7 +30,9 @@ source ~/anaconda3/etc/profile.d/conda.sh && conda activate eztracks
 ---
 # Micro tutorial
 ## Introduction
-`ezTracks` only needs a configuration file to work. To generate a plot, you need to do the following steps:
+`ezTracks` only needs a configuration file to work. 
+
+To process to generate a plot is:
 1. Activate the `eztracks` environment (or having all dependencies available in the PATH)
 2. Run `python eztracks.py check path/to/config_file`
 3. Run `python eztracks.py prepare path/to/config_file`
