@@ -3,7 +3,7 @@
 
 ---
 ## Setup
-The program it's just the file `eztracks.py`, and works on Linux, Windows (Ubuntu WSL1) (I have not check on Mac). 
+The program it's just the file `eztracks.py` and works on Linux and Windows (Ubuntu WSL1) (I have not check on Mac but it should work too). 
 
 I suggest to setup a `conda` environment for installing `ezTracks` dependencies:
 
