@@ -30,7 +30,7 @@ source ~/anaconda3/etc/profile.d/conda.sh && conda activate eztracks
 ---
 # Micro tutorial
 ## Introduction
-`ezTracks` only needs a configuration file to work. 
+`ezTracks` only needs a configuration file to work. The only options implemented are the same as the sample file `test/test_config.ini`. The coordinates must be in bed format.
 
 To process to generate a plot is:
 1. Activate the `eztracks` environment (or having all dependencies available in the PATH)
