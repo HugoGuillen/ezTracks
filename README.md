@@ -1,6 +1,6 @@
 ![logo](logo.png)
 # ezTracks
-`ezTracks` (*easy tracks*) is a pyGenomeTracks’s wrapper for plotting a single GTF annotation followed by grouped bed files. `ezTracks` preprocesses the input tracks allowing to change and render the plot faster.
+`ezTracks` (*easy tracks*) is a [pyGenomeTracks](https://github.com/deeptools/pyGenomeTracks) wrapper for plotting a single GTF annotation followed by grouped bed files. `ezTracks` preprocesses the input tracks allowing to change and render the plot faster.
 
 ![output plot](test_output/my_tracks.png)
 
