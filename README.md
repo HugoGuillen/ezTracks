@@ -35,7 +35,7 @@ source ~/anaconda3/etc/profile.d/conda.sh && conda activate eztracks
 ---
 # Micro tutorial
 ## Introduction
-`ezTracks` only needs a configuration file to work. The only options implemented are the same as the sample file `test/test_config.ini`. The coordinates must be in bed format.
+`ezTracks` only needs a configuration file to work. The only options implemented are the same as the sample file `test/test_config.ini`. The coordinates must be in bed format. To generate the tracks shown above you just need to enter the `test` folder and run: 
 
 ```bash
 conda activate eztracks
@@ -43,3 +43,5 @@ python eztracks.py check test/test_config.ini
 python eztracks.py prepare test/test_config.ini
 python eztracks.py draw test/test_config.ini
 ```
+
+The complete tutorial is located [here](tutorial.md).
