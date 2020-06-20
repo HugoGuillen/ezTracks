@@ -1,6 +1,6 @@
 ![logo](logo.png)
 # ezTracks
-`ezTracks` (*easy tracks*) plots a single GTF annotation followed by grouped bed files. `ezTracks` preprocesses the input tracks, allowing to change and render the plot faster. It's smart enough to detect all beds inside folders, and also to omit tracks when they are empty in the queried region.
+`ezTracks` (*easy tracks*) plots a single GTF annotation followed by grouped bed files. `ezTracks` preprocesses the input tracks, allowing to change and render the plot faster. It's smart enough to detect all beds inside folders, and also to omit tracks when they result empty in the queried region.
 
 The core of this tool is [pyGenomeTracks](https://github.com/deeptools/pyGenomeTracks).
 
@@ -23,7 +23,7 @@ With `ezTracks` you can generate three different views:
 ## Setup
 The program it's just the file `eztracks.py`. It works on Linux and Windows (Ubuntu WSL1) (I have not checked on Mac but it should work too). 
 
-I suggest to setup a `conda` environment for installing `ezTracks` dependencies:
+I suggest to setup a `conda` environment (Python 3.6+) for installing `ezTracks` dependencies:
 
 ```bash
 conda config --add channels defaults
