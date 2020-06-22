@@ -59,13 +59,12 @@ python eztracks.py prepare test/config.region.ini
 python eztracks.py draw test/config.region.ini
 ```
 
-The complete tutorial is located [here](tutorial.md).
+The complete tutorial is located [here](tutorial.md). However, just keep in mind that the different modes are accessed via the configuration file in the `[default]` section:
+![params](test/ezparams.png)
 
 ---
 # TODO
 
-- Update tutorial to cover the three modes (transcript and transcript-centric, force-forward).
-- Refactor new code.
-- Implement option to reverse negative-strand transcripts in the transcript-centric view.
-- Accept arguments via command line and override configuration file
-- Global configuration for template
+- Update tutorial to cover all modes and explain parameters.
+- Accept arguments via command line and override configuration file.
+- Global configuration for PYGT template.
