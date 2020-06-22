@@ -8,16 +8,16 @@ The core of this tool is [pyGenomeTracks](https://github.com/deeptools/pyGenomeT
 With `ezTracks` you can generate three different views:
 
 ## Plot genomic region
-
-![output plot](test_region/my_tracks.png)
+Check [test/config.region.ini](test/config.region.ini)
+![output plot](test_output/test_region/my_tracks.png)
 
 ## Query individual transcripts
+Check [test/config.trans.ini](test/config.trans.ini)
+![output plot](test_output/test_trans/my_tracks.png)
 
-![output plot](test_trans/my_tracks.png)
-
-## Transcript-centric annotation
-
-![output plot](test_trans_r/my_tracks.png)
+## Transcript-relative annotation
+Check [test/config.trans_ni_ff.ini](test/config.trans_ni_ff.ini)
+![output plot](test_output/test_trans_ni_ff/my_tracks.png)
 
 ---
 ## Setup
@@ -64,6 +64,8 @@ The complete tutorial is located [here](tutorial.md).
 ---
 # TODO
 
-- Update tutorial to cover the two new modes (transcript and transcript-centric).
+- Update tutorial to cover the three modes (transcript and transcript-centric, force-forward).
 - Refactor new code.
 - Implement option to reverse negative-strand transcripts in the transcript-centric view.
+- Accept arguments via command line and override configuration file
+- Global configuration for template
