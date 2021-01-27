@@ -23,26 +23,18 @@ Check [test/config.trans_ni_ff.ini](test/config.trans_ni_ff.ini)
 ## Setup
 The program it's just the file `eztracks.py`. It works on Linux and Windows (Ubuntu WSL1) (I have not checked on Mac but it should work too). 
 
-I suggest to setup a `conda` environment (Python 3.6+) for installing `ezTracks` dependencies:
+I suggest to setup a `conda` environment (Python 3.7+) for installing `ezTracks` dependencies:
 
 ```bash
 conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
 
-conda create -n eztracks --yes python=3
-conda activate eztracks
-conda install -c anaconda freetype
-conda install -c bioconda bedtools
-pip install git+https://github.com/deeptools/HiCMatrix.git
-pip install git+https://github.com/deeptools/pyGenomeTracks.git
+conda create -n eztracks -c bioconda -c conda-forge -c anaconda pygenometracks bedtools freetype python=3.7
 ```
 
-*Note*: if you are having problems *activating* the environment, probably you can replace the line 
-```bash
-conda activate eztracks
-````
-with
+Make sure you *activate* the environment (`conda activate eztracks`) before running the script. If you are having problems *activating* the environment, adjust to your local anaconda installation:
+
 ```bash
 source ~/anaconda3/etc/profile.d/conda.sh && conda activate eztracks
 ```
