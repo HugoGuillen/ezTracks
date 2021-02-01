@@ -30,7 +30,7 @@ conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
 
-conda create -n eztracks -c bioconda -c conda-forge -c anaconda pygenometracks bedtools freetype python=3.7
+conda create -n eztracks -c bioconda -c conda-forge -c anaconda nomkl pygenometracks bedtools freetype python=3.7
 ```
 
 Make sure you *activate* the environment (`conda activate eztracks`) before running the script. If you are having problems *activating* the environment, adjust to your local anaconda installation:

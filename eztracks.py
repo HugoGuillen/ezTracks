@@ -2,6 +2,7 @@ import sys
 import os
 from os import path,listdir
 import pandas as pd
+from pandas.errors import EmptyDataError
 import csv
 import subprocess
 import argparse
@@ -255,6 +256,57 @@ def transcript_info(input_gtf):
     return R
     
 #~~~~~~~~~~~~~~~~~~~~
+def generate_annotation_csv(prep_path,output_csv):
+    cols3 = ['chrom','start','end']
+    cols4 = ['chrom','start','end','name']
+    cols6 = ['chrom','start','end','name','score','strand']
+    output_bed = output_csv[:-4]+'.bed'
+    print(output_bed)
+    folders = [x for x in listdir(prep_path) 
+               if path.isdir(path.join(prep_path,x))]
+    DFS = []
+    for folder in sorted(folders):
+        input_folder = path.join(prep_path,folder)
+        beds = [x for x in listdir(input_folder) if x.endswith('.bed')]
+        for bed in beds:        
+            input_bed = path.join(input_folder,bed)
+            try:
+                d = pd.read_csv(input_bed,sep='\t',header=None)
+            except EmptyDataError:
+                continue
+            name = '%s/%s'%(folder,bed[:-4])
+            if len(d.columns)==3:
+                d.columns = cols3
+            elif len(d.columns)==4:
+                d.columns = cols4
+            elif len(d.columns)==6:
+                d.columns = cols6
+            else:
+                raise NotImplementedError('Only BED<3,4,6> formats supported')
+            d['dataset'] = name
+            DFS.append(d)
+    df = pd.concat(DFS).sort_values(by=['chrom','start'])
+    
+    #~~~ Fix NaNs
+    if 'name' in df:
+        df['name'] = df['name'].fillna('')
+    if 'score' in df:
+        df['score'] = df['score'].fillna(0)
+    if 'strand' in df:
+        df['strand'] = df['strand'].fillna('.')
+    
+    #~~~ Save CSV
+    df.to_csv(output_csv,index=None)
+    print('# Wrote',output_csv)
+
+    #~~~ Set BED columns in order
+    bedcols = [x for x in cols6 if x in df]
+    dfbed = df.copy()
+    dfbed['name'] = dfbed['dataset']+':'+dfbed['name']
+    dfbed[bedcols].to_csv(output_bed,index=None,header=None,sep='\t')
+    print('# Wrote',output_bed)    
+    return df
+
 def prepare(config_ini):
     config, mode = load_config(config_ini)
     output_path = path.abspath(config['default']['output_path'])
@@ -262,8 +314,10 @@ def prepare(config_ini):
     prep_path = path.join(output_path,'prep')
     prep_gtf = path.join(prep_path,'input.gtf')
     query_bed = path.join(prep_path,'query.bed')
-    folders = [output_path,prep_path]
+    annotation_csv = path.join(output_path,'output.annotation.csv')
+    #annotation_bed = path.join(output_path,'output.annotation.bed') #automatic
     reverse_mode = False
+    folders = [output_path,prep_path]    
     for folder in folders:
         if not path.exists(folder):
             os.makedirs(folder)
@@ -320,6 +374,8 @@ def prepare(config_ini):
     if reverse_mode:
         calls.append(reverse_script+' -i {gtf} > {gtf}ff; mv {gtf}ff {gtf}'.format(gtf=prep_gtf))
     execute_calls(calls)
+    print('# Generating annotation CSV and BEDX.')
+    generate_annotation_csv(prep_path,annotation_csv)
     print('# Done.',file=sys.stderr)
     
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
