@@ -115,7 +115,7 @@ def load_tracks(config_obj):
         else:            
             files = [path.join(P,x) for x in listdir(P) if x.endswith('.bed') or x.endswith('.bed.gz')]
             if len(files)==0:
-                print('# No bed tracks found in %s. Skipping.',file=sys.stderr)
+                print('# No bed tracks found in %s. Skipping.'%P,file=sys.stderr)
                 continue
             tracks[group] = []
             for p in files:                
@@ -281,8 +281,11 @@ def generate_annotation_csv(prep_path,output_csv):
                 d.columns = cols4
             elif len(d.columns)==6:
                 d.columns = cols6
+            elif len(d.columns)==5: #Weird case, no strand
+                d.columns = cols6[:-1]
+                d['strand'] = '.'
             else:
-                raise NotImplementedError('Only BED<3,4,6> formats supported')
+                raise NotImplementedError('Only BED<3,4,6> formats supported [%d columns found]'%len(d.columns))
             d['dataset'] = name
             DFS.append(d)
     df = pd.concat(DFS).sort_values(by=['chrom','start'])
