@@ -75,6 +75,29 @@ height=.8
 
 """
 
+#~~~~~~~~~~~~~~~~~~IGV TEMPLATES
+template_resource = """<Resource path="{rel_resource}"/>""" 
+#rel_resource, name_resource, color
+template_track = """<Track attributeKey="{rel_resource}" clazz="org.broad.igv.track.FeatureTrack" color="{color}" displayMode="EXPANDED" fontSize="10" id="{rel_resource}" name="{name_resource}" visible="true"/>"""
+#locus (ucsc format), resources, tracks
+template_main = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Session genome="hg38" hasGeneTrack="false" hasSequenceTrack="false" locus="{locus}" version="8">
+    <Resources>
+    {resources}
+    </Resources>
+    <Panel height="600" name="FeaturePanel" width="1000">        
+        {tracks}
+    </Panel>
+    <PanelLayout dividerFractions="0.009950248756218905"/>
+    <HiddenAttributes>
+        <Attribute name="DATA FILE"/>
+        <Attribute name="DATA TYPE"/>
+        <Attribute name="NAME"/>
+    </HiddenAttributes>
+</Session>
+"""
+cmap = plt.cm.Dark2
+
 #~~~~~~~~~~~~~~~~~~~~
 class Mode(enum.Flag):
     REGION = enum.auto()
@@ -310,6 +333,42 @@ def generate_annotation_csv(prep_path,output_csv):
     print('# Wrote',output_bed)    
     return df
 
+def generate_igv_session(prep_path,output_igv):
+    # Get locus
+    if path.exists(path.join(prep_path,'vertical.bed')):
+        d = pd.read_csv(path.join(prep_path,'vertical.bed'),sep='\t',header=None)
+        locus = '%s:%d-%s'%(d.iloc[0][0],1,d[2].max())
+    else:
+        with open(path.join(prep_path,'query.bed'),'r') as f:
+            x = f.readline().strip().split('\t')
+            locus = '%s:%d-%s'%(x[0],int(x[1])+1,x[2])    
+    #Relative path to igv xml
+    gtf = './prep/input.gtf'
+    resources,tracks = [],[]
+    resources.append(template_resource.format(rel_resource=gtf))
+    tracks.append(template_track.format(rel_resource=gtf,name_resource='Gencode',color='0,0,255'))    
+    folders = [x for x in listdir(prep_path) 
+           if path.isdir(path.join(prep_path,x)) and x[0]!='.']
+    for idx,folder in enumerate(sorted(folders)):
+        input_folder = path.join(prep_path,folder)
+        beds = [x for x in listdir(input_folder) if x.endswith('.bed')]
+        color = ','.join(map(str,cmap(idx%8,bytes=True)[:3]))        
+        for bed in sorted(beds):
+            input_bed = path.join(input_folder,bed)
+            try:
+                d = pd.read_csv(input_bed,sep='\t',header=None)
+            except EmptyDataError:
+                continue
+            name = '%s/%s'%(folder,bed[:-4])            
+            resources.append(template_resource.format(rel_resource=path.join('prep',folder,bed)))                    
+            tracks.append(template_track.format(rel_resource=path.join('prep',folder,bed),
+                                                name_resource=name,color=color))
+    with open(output_igv,'w') as f:
+        f.write(template_main.format(locus=locus,
+                                     resources='\n\t\t'.join(resources),
+                                     tracks='\n\t\t\t'.join(tracks)))
+    print('# Wrote',output_igv) 
+
 def prepare(config_ini):
     config, mode = load_config(config_ini)
     output_path = path.abspath(config['default']['output_path'])
@@ -318,6 +377,7 @@ def prepare(config_ini):
     prep_gtf = path.join(prep_path,'input.gtf')
     query_bed = path.join(prep_path,'query.bed')
     annotation_csv = path.join(output_path,'output.annotation.csv')
+    output_igv = path.join(output_path,'output.igv.session.xml')
     #annotation_bed = path.join(output_path,'output.annotation.bed') #automatic
     reverse_mode = False
     folders = [output_path,prep_path]    
@@ -379,6 +439,7 @@ def prepare(config_ini):
     execute_calls(calls)
     print('# Generating annotation CSV and BEDX.')
     generate_annotation_csv(prep_path,annotation_csv)
+    generate_igv_session(prep_path,output_igv)
     print('# Done.',file=sys.stderr)
     
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
