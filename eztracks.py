@@ -515,7 +515,7 @@ def draw(config_ini):
                 track_count+=1
             else:
                 f.write(str_track_grouplabel.format(group=group,emptybed=empty_bed))
-                for track in tracks:                    
+                for track in sorted(tracks,key=lambda x:x[1].lower()):
                     filename = path.join(track_path,track[1]+'.bed')                    
                     if os.stat(filename).st_size == 0:
                         continue
