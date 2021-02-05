@@ -263,7 +263,7 @@ def create_relative_mapping_index(prep_path):
     dfexons[[0,'bed',3]].to_csv(vert_bed,sep='\t',index=None,header=None)
     dfexons.drop(columns=['bed'],inplace=True)
     with open(vert_bed,'a') as f:
-        f.write('\t'.join([dfexons.iloc[0][0],str(t_length-1),str(t_length)])+'\n')
+        f.write('\t'.join([dfexons.iloc[0][0],str(t_length),str(t_length+1)])+'\n')
     dftrans[3] = 1
     dftrans[4] = t_length
     dgt = pd.concat((dftrans,dfexons)).sort_index()
@@ -286,7 +286,7 @@ def generate_annotation_csv(prep_path,output_csv):
     output_bed = output_csv[:-4]+'.bed'
     print(output_bed)
     folders = [x for x in listdir(prep_path) 
-               if path.isdir(path.join(prep_path,x))]
+               if path.isdir(path.join(prep_path,x)) and x[0]!='.']
     DFS = []
     for folder in sorted(folders):
         input_folder = path.join(prep_path,folder)
@@ -416,7 +416,7 @@ def prepare(config_ini):
             query_bed = index_bed
         #~~~Prepare for reversing
         TI = transcript_info(prep_gtf)
-        force_forward = config.getboolean('default','force_forward',fallback=False) 
+        force_forward = config.getboolean('default','force_forward',fallback=True) 
         reverse_mode = force_forward and TI['strand']=='-'
         reverse_script = path.join(path.dirname(os.path.abspath(__file__)),'reverseBed.sh')
         call_reverse = reverse_script+' -i {output_bed} -c %.1f > {output_bed}ff; mv {output_bed}ff {output_bed}'%TI['midpoint']
@@ -436,6 +436,8 @@ def prepare(config_ini):
                 calls.append(call_reverse.format(output_bed=output_bed))
     if reverse_mode:
         calls.append(reverse_script+' -i {gtf} > {gtf}ff; mv {gtf}ff {gtf}'.format(gtf=prep_gtf))
+        vert_bed = path.join(prep_path,'vertical.bed')
+        calls.append(reverse_script+' -i {gtf} > {gtf}ff; mv {gtf}ff {gtf}'.format(gtf=vert_bed))
     execute_calls(calls)
     print('# Generating annotation CSV and BEDX.')
     generate_annotation_csv(prep_path,annotation_csv)
