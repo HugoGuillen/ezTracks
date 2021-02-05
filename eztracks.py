@@ -416,7 +416,7 @@ def prepare(config_ini):
             query_bed = index_bed
         #~~~Prepare for reversing
         TI = transcript_info(prep_gtf)
-        force_forward = config.getboolean('default','force_forward',fallback=True) 
+        force_forward = (mode is Mode.TRANS_NOINTRONS)
         reverse_mode = force_forward and TI['strand']=='-'
         reverse_script = path.join(path.dirname(os.path.abspath(__file__)),'reverseBed.sh')
         call_reverse = reverse_script+' -i {output_bed} -c %.1f > {output_bed}ff; mv {output_bed}ff {output_bed}'%TI['midpoint']
@@ -437,7 +437,8 @@ def prepare(config_ini):
     if reverse_mode:
         calls.append(reverse_script+' -i {gtf} > {gtf}ff; mv {gtf}ff {gtf}'.format(gtf=prep_gtf))
         vert_bed = path.join(prep_path,'vertical.bed')
-        calls.append(reverse_script+' -i {gtf} > {gtf}ff; mv {gtf}ff {gtf}'.format(gtf=vert_bed))
+        if path.exists(vert_bed):
+            calls.append(reverse_script+' -i {gtf} > {gtf}ff; mv {gtf}ff {gtf}'.format(gtf=vert_bed))
     execute_calls(calls)
     print('# Generating annotation CSV and BEDX.')
     generate_annotation_csv(prep_path,annotation_csv)
