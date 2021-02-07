@@ -311,6 +311,13 @@ def generate_annotation_csv(prep_path,output_csv):
                 raise NotImplementedError('Only BED<3,4,6> formats supported [%d columns found]'%len(d.columns))
             d['dataset'] = name
             DFS.append(d)
+    if len(DFS)==0: #If no intersection, output empty files
+        with open(output_csv,'w') as f:
+            pass
+        with open(output_bed,'w') as f:
+            pass
+        return pd.DataFrame
+        
     df = pd.concat(DFS).sort_values(by=['chrom','start'])
     
     #~~~ Fix NaNs
