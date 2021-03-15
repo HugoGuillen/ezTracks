@@ -465,9 +465,10 @@ def draw(config_ini):
     output_path = path.abspath(config['default']['output_path'])
     prep_path = path.join(output_path,'prep')
     prep_gtf = path.join(prep_path,'input.gtf')
-    output_ini = path.join(output_path,'config.ini')    
+    output_ini = path.join(output_path,'config.ini')
     output_img = path.join(output_path, config['plot'].get('output_img','my_tracks.pdf'))
     empty_bed = path.join(prep_path,'empty.bed')
+    output_command = path.join(output_path,'cmd_draw.sh')
     with open(empty_bed,'w') as f:
         pass
     
@@ -541,9 +542,12 @@ def draw(config_ini):
     if msg!='':
         print(msg,file=sys.stderr)
     print('# Wrote',output_img,file=sys.stderr)
-    print('#######################################################################',file=sys.stderr)
-    print('### If you want to customize the image modify %s and then rerun\n%s'%(path.abspath(output_ini),call),file=sys.stderr)
-    print('#######################################################################',file=sys.stderr)
+    S = '#######################################################################\n'
+    S+= '### If you want to customize the image modify %s and then rerun:\n'%(path.abspath(output_ini))
+    S+= call+'\n'
+    with open(output_command,'w') as f:
+        f.write(S)
+    print(S,file=sys.stderr)
 
     
     
