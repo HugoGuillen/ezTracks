@@ -297,7 +297,8 @@ def generate_annotation_csv(prep_path,output_csv):
                 d = pd.read_csv(input_bed,sep='\t',header=None)
             except EmptyDataError:
                 continue
-            name = '%s/%s'%(folder,bed[:-4])
+            bedname = bed[:-4]
+            name = '%s/%s'%(folder,bedname) if bedname!=folder else bedname
             if len(d.columns)==3:
                 d.columns = cols3
             elif len(d.columns)==4:
@@ -366,7 +367,8 @@ def generate_igv_session(prep_path,output_igv):
                 d = pd.read_csv(input_bed,sep='\t',header=None)
             except EmptyDataError:
                 continue
-            name = '%s/%s'%(folder,bed[:-4])            
+            bedname = bed[:-4]
+            name = '%s/%s'%(folder,bedname) if bedname!=folder else bedname
             resources.append(template_resource.format(rel_resource=path.join('prep',folder,bed)))                    
             tracks.append(template_track.format(rel_resource=path.join('prep',folder,bed),
                                                 name_resource=name,color=color))

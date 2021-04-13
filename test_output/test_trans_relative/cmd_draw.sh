@@ -1,0 +1,3 @@
+#######################################################################
+### If you want to customize the image modify /data/projects/p283_rna_and_disease/projects/hguillen/SOFTWARE/ezTracks/test_output/test_trans_relative/config.ini and then rerun:
+pyGenomeTracks --tracks /data/projects/p283_rna_and_disease/projects/hguillen/SOFTWARE/ezTracks/test_output/test_trans_relative/config.ini --region chrX:0-19345 --fontSize 12 --trackLabelFraction 0.2 --trackLabelHAlign left --width 25 --dpi 100 -o /data/projects/p283_rna_and_disease/projects/hguillen/SOFTWARE/ezTracks/test_output/test_trans_relative/my_tracks.png

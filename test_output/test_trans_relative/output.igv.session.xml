@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<Session genome="hg38" hasGeneTrack="false" hasSequenceTrack="false" locus="chrX:73820656-73852723" version="8">
+<Session genome="hg38" hasGeneTrack="false" hasSequenceTrack="false" locus="chrX:1-19246" version="8">
     <Resources>
     <Resource path="./prep/input.gtf"/>
 		<Resource path="prep/CRS/CRS.bed"/>
@@ -10,7 +10,7 @@
     </Resources>
     <Panel height="600" name="FeaturePanel" width="1000">        
         <Track attributeKey="./prep/input.gtf" clazz="org.broad.igv.track.FeatureTrack" color="0,0,255" displayMode="EXPANDED" fontSize="10" id="./prep/input.gtf" name="Gencode" visible="true"/>
-			<Track attributeKey="prep/CRS/CRS.bed" clazz="org.broad.igv.track.FeatureTrack" color="27,158,119" displayMode="EXPANDED" fontSize="10" id="prep/CRS/CRS.bed" name="CRS/CRS" visible="true"/>
+			<Track attributeKey="prep/CRS/CRS.bed" clazz="org.broad.igv.track.FeatureTrack" color="27,158,119" displayMode="EXPANDED" fontSize="10" id="prep/CRS/CRS.bed" name="CRS" visible="true"/>
 			<Track attributeKey="prep/phastCons/20way.bed" clazz="org.broad.igv.track.FeatureTrack" color="217,95,2" displayMode="EXPANDED" fontSize="10" id="prep/phastCons/20way.bed" name="phastCons/20way" visible="true"/>
 			<Track attributeKey="prep/phastCons/7way.bed" clazz="org.broad.igv.track.FeatureTrack" color="217,95,2" displayMode="EXPANDED" fontSize="10" id="prep/phastCons/7way.bed" name="phastCons/7way" visible="true"/>
 			<Track attributeKey="prep/repeats/Alu.bed" clazz="org.broad.igv.track.FeatureTrack" color="117,112,179" displayMode="EXPANDED" fontSize="10" id="prep/repeats/Alu.bed" name="repeats/Alu" visible="true"/>
