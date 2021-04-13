@@ -66,6 +66,27 @@ python eztracks.py draw test_config/config.region.ini
 The complete tutorial is located [here](tutorial.md). However, just keep in mind that the different modes are accessed via the configuration file in the `[default]` section.
 
 ---
+# Output files
+## Output image
+Output image as specified in the field `output_img` in the `[plot]` section of the configuration file.
+
+## `config.ini`
+
+Configuration file for PyGenomeTracks. This is the file to modify if you want to fine tune your plot without rerunning the whole annotation. After modifying, you need to run the script `cmd_draw.sh`.
+
+## `output.annotation.bed`
+
+Annotation in BED6 format. `name` field (column 4) is coded as `DATASET</SUBDATASET>:FEATURE_NAME`, and `strand` field (column 6) has a `.` if the dataset didn't include strand information. For the transcript-relative mode, the `strand` is indicated as relative to the strand direction, not the forward strand.
+
+## `output.annotation.csv`
+
+Same information as `output.annotation.bed` but with `DATASET` and `FEATURE_NAME` split into two distinct columns.
+
+## `output.igv.session.xml`
+
+[The Integrative Genomics Viewer (IGV)](https://software.broadinstitute.org/software/igv/) is a high-performance, easy-to-use, interactive tool for the visual exploration of genomic data. You can load this file into your IGV local installation.
+
+---
 # TODO
 
 - Update tutorial to cover all modes and explain parameters.
