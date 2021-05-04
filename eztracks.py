@@ -11,6 +11,7 @@ from collections import OrderedDict
 import matplotlib
 import matplotlib.pyplot as plt
 import enum
+import math
 
 #~~~~~~~~HELPERS FOR BUILDING PYGT CONFIG FILE
 #~~~Gencode annotation
@@ -22,11 +23,10 @@ title={gtf_title}
 file={gtf_input}
 file_type=gtf 
 height={gtf_height}
-#~I think this is a bug in gtf track implementation
 color=black
 #~Labels on annotations
 labels=true
-fontsize=8
+fontsize=12
 prefered_name=transcript_name
 #~Arrows on TSSs (comment line to remove)
 style=tssarrow
@@ -68,7 +68,7 @@ color = {color}
 labels = false
 file_type = bed
 display = collapsed
-gene_rows = 1
+gene_rows = 3
 arrowhead_included = true
 style = UCSC
 height=.8
@@ -236,7 +236,7 @@ def execute_calls(calls):
             print(msg,file=sys.stderr)
             
 #~~~~~~~~~~~~~~~~~~~~
-def create_relative_mapping_index(prep_path):
+def create_relative_mapping_index(prep_path,intron_fraction=0.2):
     #~~~Inputs
     prep_gtf = path.join(prep_path,'input.gtf')
     query_bed = path.join(prep_path,'query.bed')
@@ -244,11 +244,15 @@ def create_relative_mapping_index(prep_path):
     index_bed = path.join(prep_path,'index.bed')
     vert_bed = path.join(prep_path,'vertical.bed')
     #~~~Prepare index (chr,start,end,intron_length_to_subtract)
-    df = pd.read_csv(query_bed,sep='\t',header=None)    
+    df = pd.read_csv(query_bed,sep='\t',header=None).sort_values(by=1)
     X = [df.iloc[0][1]]+list(df[2].values)[:-1]
     df[3] = X
     df['length'] = df[2]-df[1]
-    df['intron'] = df[1]-df[3]
+    #~~~Compute intron spacing. if intron_fraction=0, it won't be added.
+    tlength = df['length'].sum()
+    intron_spacing = int(math.ceil(tlength*intron_fraction/(len(df)-1)))    
+    df['intron'] = df[1]-df[3]-intron_spacing
+    df.iloc[0,df.columns.get_loc('intron')] = 0
     df['cumsum'] = df['intron'].cumsum()
     df[[0,1,2,'cumsum']].to_csv(index_bed,sep='\t',header=None,index=None)
     t_length = df['length'].sum()
@@ -257,15 +261,19 @@ def create_relative_mapping_index(prep_path):
     offset_gtf = dgt[3].min()
     dfexons = dgt[dgt[2]=='exon'].sort_values(by=3)
     dftrans = dgt[dgt[2]=='transcript'].copy()
+    print('>>>>>>>>>>>>intron_spacing=',intron_spacing)    
     dfexons[3] = (dfexons[3]-df['cumsum'].values)-offset_gtf+1
     dfexons[4] = (dfexons[4]-df['cumsum'].values)-offset_gtf+1
-    dfexons['bed'] = dfexons[3]-1
-    dfexons[[0,'bed',3]].to_csv(vert_bed,sep='\t',index=None,header=None)
-    dfexons.drop(columns=['bed'],inplace=True)
-    with open(vert_bed,'a') as f:
-        f.write('\t'.join([dfexons.iloc[0][0],str(t_length),str(t_length+1)])+'\n')
+    dfexons['3bed'] = dfexons[3]-1
+    dfexons['4bed'] = dfexons[4]-1    
+    dfexons[[0,'3bed',3]].to_csv(vert_bed,sep='\t',index=None,header=None)
+    dfexons[[0,'4bed',4]].to_csv(vert_bed,sep='\t',index=None,header=None,mode='a')    
+    dfexons.drop(columns=['3bed','4bed'],inplace=True)
+    t_length_repr = dfexons[4].max()
+#     with open(vert_bed,'a') as f:
+#         f.write('\t'.join([dfexons.iloc[0][0],str(t_length_repr),str(t_length_repr+1)])+'\n')
     dftrans[3] = 1
-    dftrans[4] = t_length
+    dftrans[4] = t_length_repr
     dgt = pd.concat((dftrans,dfexons)).sort_index()
     dgt.to_csv(prep_gtf,sep='\t',index=None,header=None,quoting=csv.QUOTE_NONE)
     offset_bed = offset_gtf-1
