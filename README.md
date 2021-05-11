@@ -11,7 +11,7 @@ With `ezTracks` you can generate three different views:
 ## Plot genomic region
 Look for annotations overlapping genomic coordinates. This is specified in the field `region` in the `[default]` section of the configuration file.
 
-Example at [test_config/config.region.ini](test/config.region.ini)
+Example at [test_config/config.region.ini](test_config/config.region.ini)
 ![output plot](test_output/test_region/my_tracks.png)
 
 ## Query individual transcripts
@@ -19,7 +19,7 @@ Example at [test_config/config.region.ini](test/config.region.ini)
 
 *(Note: if `region` is also specified in the configuration, this mode won't work.)*
 
-Example at [test_config/config.trans.ini](test/config.trans.ini)
+Example at [test_config/config.trans.ini](test_config/config.trans.ini)
 ![output plot](test_output/test_trans/my_tracks.png)
 
 ## Transcript-relative annotation
@@ -28,7 +28,7 @@ One advantage of `ezTracks` over a regular genome browser is that you can easily
 *(Note: if `region` is also specified in the configuration, this mode won't work.)*
 
 Example at 
-Check [test_config/config.trans_relative.ini](test/config.trans_ni_ff.ini)
+Check [test_config/config.trans_relative.ini](test_config/config.trans_ni_ff.ini)
 ![output plot](test_output/test_trans_relative/my_tracks.png)
 
 ---
