@@ -1,10 +1,40 @@
 ![logo](logo.png)
 # ezTracks
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4749431.svg)](https://doi.org/10.5281/zenodo.4749431)
 `ezTracks` (*easy tracks*) plots a single GTF annotation followed by grouped bed files. `ezTracks` preprocesses the input tracks, allowing to change and render the plot without rebuilding indexes. It's smart enough to detect all beds inside folders, and also to omit tracks when they are not overlapping the queried region. Additionally, it generates annotations in **BED** and **CSV** format as well as an **XML IGV session** for further local inspection.
 
 The core of this tool is [pyGenomeTracks](https://github.com/deeptools/pyGenomeTracks).
 
 One advantage of `ezTracks` is the minimal effort to generate feature-oriented annotations and plots. For example, with a 17 line `ezTracks` configuration file one can automatically generate 150 lines of pyGenomeTracks' configuration and the corresponding annotation files. Additionally, one is not limited by the number of tracks/annotation BEDs plotted, as it usually occurs with genome browsers.
+
+---
+## Setup
+The program it's just the file `eztracks.py` and the helper script  [reverseBed](https://github.com/HugoGuillen/reverseBed). It have been tested in Linux and Windows (Ubuntu WSL1). 
+
+I suggest to setup a `conda` environment (Python 3.7+) for installing `ezTracks` dependencies:
+
+```bash
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+
+conda create -n eztracks -c bioconda -c conda-forge -c anaconda nomkl pygenometracks bedtools freetype python=3.7
+```
+
+Make sure you *activate* the environment (`conda activate eztracks`) before running the script. If you are having problems *activating* the environment, adjust to your local anaconda installation:
+
+```bash
+source ~/anaconda3/etc/profile.d/conda.sh && conda activate eztracks
+```
+
+---
+# Showcase
+Data in `test_config/test_tracks` were obtained from the following references:
+
+- Annotation: `Frankish, Adam, et al. "GENCODE reference annotation for the human and mouse genomes." Nucleic acids research 47.D1 (2019): D766-D773.`
+- CRS: `Seemann, Stefan E., et al. "The identification and functional annotation of RNA structures conserved in vertebrates." Genome research 27.8 (2017): 1371-1383.`
+- phastCons: `Siepel, Adam, et al. "Evolutionarily conserved elements in vertebrate, insect, worm, and yeast genomes." Genome research 15.8 (2005): 1034-1050.`
+- repeats: `Smit, AFA, Hubley, R & Green, P. RepeatMasker Open-4.0. 2013-2015 <http://www.repeatmasker.org>.` and `Karolchik, Donna, et al. "The UCSC genome browser database." Nucleic acids research 31.1 (2003): 51-54.`.
 
 With `ezTracks` you can generate three different views:
 
@@ -31,25 +61,7 @@ Example at
 Check [test_config/config.trans_relative.ini](test_config/config.trans_ni_ff.ini)
 ![output plot](test_output/test_trans_relative/my_tracks.png)
 
----
-## Setup
-The program it's just the file `eztracks.py` and the helper script  [reverseBed](https://github.com/HugoGuillen/reverseBed). It have been tested in Linux and Windows (Ubuntu WSL1). 
 
-I suggest to setup a `conda` environment (Python 3.7+) for installing `ezTracks` dependencies:
-
-```bash
-conda config --add channels defaults
-conda config --add channels bioconda
-conda config --add channels conda-forge
-
-conda create -n eztracks -c bioconda -c conda-forge -c anaconda nomkl pygenometracks bedtools freetype python=3.7
-```
-
-Make sure you *activate* the environment (`conda activate eztracks`) before running the script. If you are having problems *activating* the environment, adjust to your local anaconda installation:
-
-```bash
-source ~/anaconda3/etc/profile.d/conda.sh && conda activate eztracks
-```
 
 ---
 # Micro tutorial
