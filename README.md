@@ -1,6 +1,8 @@
-![logo](logo.png)
 # ezTracks
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4749431.svg)](https://doi.org/10.5281/zenodo.4749431)
+
+![logo](logo.png)
+
 `ezTracks` (*easy tracks*) plots a single GTF annotation followed by grouped bed files. `ezTracks` preprocesses the input tracks, allowing to change and render the plot without rebuilding indexes. It's smart enough to detect all beds inside folders, and also to omit tracks when they are not overlapping the queried region. Additionally, it generates annotations in **BED** and **CSV** format as well as an **XML IGV session** for further local inspection.
 
 The core of this tool is [pyGenomeTracks](https://github.com/deeptools/pyGenomeTracks).
