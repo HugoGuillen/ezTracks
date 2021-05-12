@@ -12,66 +12,63 @@ import matplotlib
 import matplotlib.pyplot as plt
 import enum
 import math
+from numpy import linspace
+cmap = plt.cm.Dark2
 
 #~~~~~~~~HELPERS FOR BUILDING PYGT CONFIG FILE
-#~~~Gencode annotation
-str_track_gtf="""[x-axis]
-where=top
+#~~~GTF Annotation
+temp_track_gtf="""[x-axis]
+where={x-axis_where}
 
-[test gtf]
-title={gtf_title}
-file={gtf_input}
-file_type=gtf 
-height={gtf_height}
-color=black
-#~Labels on annotations
-labels=true
-fontsize=12
-prefered_name=transcript_name
+[gtf main]
+title = {gtf_title}
+file = {gtf_input}
+file_type = gtf 
+height = {gtf_height}
+color = {gtf_color}
+labels = {gtf_labels}
+fontsize = {gtf_fontsize}
+prefered_name = {gtf_prefered_name}
 #~Arrows on TSSs (comment line to remove)
 style=tssarrow
 
 [spacer]
-height = 0.4
+height = {gtf_spacer}
 
 """
 
-str_track_line="""
+temp_track_line="""
 [lspacer]
-file_type=hlines
-show_data_range=false
-y_values=.5
-overlay_previous=share-y
-height = 0.8
-
-#[spacer]
-#height = 0.1
-
+file_type = hlines
+show_data_range = false
+y_values = .5
+overlay_previous = share-y
+height = {bedtrack_height}
 """
 
 #~~~Group spacer (more than 1 bed file per group)
-str_track_grouplabel="""
-[bedspacer {group}]
-file = {emptybed}
-title = {group}
+temp_track_grouplabel="""
+[bedspacer {{group}}]
+file = {{emptybed}}
+title = {{group}}
 file_type = bed
 gene_rows = 1
-height=.8
+height = {bedtrack_height_groupname}
 """
 
 #~~~Group spacer (General bed formatting)
-str_track_bed="""
-[test {group}-{title}]
-file = {filename}
-title = {title}
-color = {color}
-labels = false
+temp_track_bed="""
+[bedtrack {{group}}-{{title}}]
+file = {{filename}}
+title = {{title}}
+color = {{color}}
 file_type = bed
-display = collapsed
-gene_rows = 3
-arrowhead_included = true
-style = UCSC
-height=.8
+height = {bedtrack_height}
+labels = {bedtrack_labels}
+display = {bedtrack_display}
+gene_rows = {bedtrack_gene_rows}
+arrowhead_included = {bedtrack_arrowhead_included}
+style = {bedtrack_style}
 
 """
 
@@ -96,38 +93,135 @@ template_main = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     </HiddenAttributes>
 </Session>
 """
-cmap = plt.cm.Dark2
 
-#~~~~~~~~~~~~~~~~~~~~
+
+####################################################################
+# Configuration helpers
 class Mode(enum.Flag):
     REGION = enum.auto()
     TRANS = enum.auto()
     TRANS_NOINTRONS = enum.auto()    
     ERROR = enum.auto()
     
-def get_mode(config_obj):
-    config = config_obj
-    if 'region' in config['default']:
-        return Mode.REGION
-    transcript = 'transcript' in config['default']
-    no_introns = config.getboolean('default','no_introns',fallback=False)    
-    if transcript and no_introns:
-        return Mode.TRANS_NOINTRONS
-    if transcript:
-        return Mode.TRANS
-    return Mode.ERROR
+def get_defaults():
+    D = OrderedDict()
+    D['default'] = OrderedDict()
+    D['tracks'] = OrderedDict()
+    D['plot'] = OrderedDict()
+    D['template'] = OrderedDict()
+    #default
+    D['default']['input_gtf']=''
+    D['default']['output_path']='.'
+    D['default']['region']=''
+    D['default']['transcript']=''
+    D['default']['no_introns']=False
+    D['default']['intron_fraction']=0.2    
+    #plot
+    D['plot']['output_img']='my_tracks.pdf'
+    D['plot']['width']=20
+    D['plot']['padding']=10
+    D['plot']['dpi']=100
+    D['plot']['colormap_name']='tab10'
+    D['plot']['colormap_count']=10
+    D['plot']['color_per_group']=True
+    #plot-gtf
+    D['plot']['x-axis_where'] = 'top'
+    D['plot']['gtf_title']=''
+    D['plot']['gtf_height']=2
+    D['plot']['gtf_color']='black'
+    D['plot']['gtf_labels']=True
+    D['plot']['gtf_fontsize']=12
+    D['plot']['gtf_prefered_name']='transcript_name'
+    D['plot']['gtf_spacer']=0.4    
+    #template    
+    D['template']['bedtrack_height'] = 0.8
+    D['template']['bedtrack_height_groupname'] = 0.8
+    D['template']['bedtrack_labels'] = False
+    D['template']['bedtrack_display'] = 'collapsed'
+    D['template']['bedtrack_gene_rows'] = 3
+    D['template']['bedtrack_arrowhead_included'] = True
+    D['template']['bedtrack_style'] = 'UCSC'
+    D['template']['bedtrack_show_name'] = True
+    D['template']['bedtrack_show_midline'] = True
+    D['template']['bedtrack_show_verticalline'] = True
+    return D
 
-def load_config(config_ini):
-    if not path.exists(config_ini):
-        raise FileNotFoundError("Config file not found. Exiting.")
-    config = configparser.ConfigParser()
-    config.optionxform = str
-    config.read(config_ini)
-    mode = get_mode(config)
-    return config,mode
+class EzConfig:
+    bool_set = set(['no_introns','bedtrack_labels','bedtrack_arrowhead_included',
+                    'gtf_labels','bedtrack_show_name','bedtrack_show_midline',
+                    'bedtrack_show_verticalline','color_per_group'])
+    int_set = set(['dpi','padding','bedtrack_gene_rows','gtf_fontsize','colormap_count'])
+    float_set = set(['width','gtf_height','bedtrack_height','bedtrack_height_groupname',
+                     'gtf_spacer','intron_fraction'])    
+    json_set = set([''])    
+    tuple_set = set([''])
+    tuplefloat_set = set([''])
+    
+    @staticmethod
+    def write_config(config_ini,config_dict=None):
+        if config_dict is None:
+            config_dict = get_defaults()
+        with open(config_ini,'w') as f:
+            for section,X in config_dict.items():
+                f.write('[%s]\n'%section)
+                for k,v in X.items():
+                    f.write('%s = %s\n'%(k,v))
+                f.write('\n') 
+    
+    def __init__(self,config_ini):
+        if not path.exists(config_ini):
+            raise FileNotFoundError("Config file not found. Exiting.")
+        config = configparser.ConfigParser()
+        config.optionxform = str
+        config.read(config_ini)
+        self.default = get_defaults()
+        self.config = config
+        self.mode = self.get_mode()
+        self.dict = self.to_dict()
+    
+    def get(section,key):
+        return self.dict[section][key]
+        
+    def get_mode(self):
+        config = self.config
+        if 'region' in config['default']:
+            if config['default']['region']!='':
+                return Mode.REGION
+        transcript = 'transcript' in config['default']
+        no_introns = config.getboolean('default','no_introns',fallback=False)
+        if transcript and no_introns:
+            return Mode.TRANS_NOINTRONS
+        if transcript:
+            return Mode.TRANS
+        return Mode.ERROR
+    
+    def parse(self,section,key):
+        if key in EzConfig.int_set:
+            return self.config.getint(section,key)
+        if key in EzConfig.float_set:
+            return self.config.getfloat(section,key)            
+        if key in EzConfig.bool_set:
+            return self.config.getboolean(section,key)
+        if key in EzConfig.json_set:
+            return json.loads(self.config[section,key])            
+        if key in EzConfig.tuple_set:
+            return tuple(self.config[section,key].strip().split(','))
+        if key in EzConfig.tuplefloat_set:
+            return tuple(map(float,self.config[section,key].strip().split(',')))            
+        return self.config.get(section,key)
+    
+    def to_dict(self):
+        parsed = self.default.copy()
+        for section in self.config:
+            for key in self.config[section]:
+                parsed[section][key] = self.parse(section,key)
+        return parsed
+    
 
-def load_tracks(config_obj):
-    config=config_obj
+####################################################################
+# Loader
+def load_tracks(config_dict):
+    config=config_dict
     tracks = OrderedDict()
     for group in config['tracks']:
         P = config['tracks'][group]
@@ -146,12 +240,16 @@ def load_tracks(config_obj):
                 tracks[group].append((p,p_name))                
     return tracks
     
-def print_config(config_obj):
-    for s in config_obj.sections():
+    
+def print_config(config_dict):
+    for s in config_dict.keys():
         print('[%s]'%s)
-        for k in config_obj[s]:
-            print('%s = %s'%(k,config_obj[s][k]))
+        for k in config_dict[s]:
+            print('%s = %s'%(k,config_dict[s][k]))
 
+
+###################################################################
+# SUBPROGRAMS
 #~~~~~~~~~~~~~~~~~~~~
 def check(config_ini):
     errors = 0
@@ -184,7 +282,8 @@ def check(config_ini):
     else:
         print('ERROR: config_file not found. Exiting.',file=sys.stderr)
         return
-    config, mode = load_config(config_ini)
+    ezconfig = EzConfig(config_ini)
+    config, mode = ezconfig.dict, ezconfig.mode
     required_params = ['output_path','input_gtf']
     for param in required_params:
         if param not in config['default']:
@@ -265,13 +364,13 @@ def create_relative_mapping_index(prep_path,intron_fraction=0.2):
     dfexons[3] = (dfexons[3]-df['cumsum'].values)-offset_gtf+1
     dfexons[4] = (dfexons[4]-df['cumsum'].values)-offset_gtf+1
     dfexons['3bed'] = dfexons[3]-1
-    dfexons['4bed'] = dfexons[4]-1    
+    dfexons['3+1'] = dfexons[3]+1
+    dfexons['4bed'] = dfexons[4]-1
+    dfexons['4+1'] = dfexons[4]+1
     dfexons[[0,'3bed',3]].to_csv(vert_bed,sep='\t',index=None,header=None)
-    dfexons[[0,'4bed',4]].to_csv(vert_bed,sep='\t',index=None,header=None,mode='a')    
-    dfexons.drop(columns=['3bed','4bed'],inplace=True)
+    dfexons[[0,4,'4+1']].to_csv(vert_bed,sep='\t',index=None,header=None,mode='a')
+    dfexons.drop(columns=['3bed','3+1','4bed','4+1'],inplace=True)
     t_length_repr = dfexons[4].max()
-#     with open(vert_bed,'a') as f:
-#         f.write('\t'.join([dfexons.iloc[0][0],str(t_length_repr),str(t_length_repr+1)])+'\n')
     dftrans[3] = 1
     dftrans[4] = t_length_repr
     dgt = pd.concat((dftrans,dfexons)).sort_index()
@@ -327,7 +426,7 @@ def generate_annotation_csv(prep_path,output_csv):
             pass
         return pd.DataFrame
         
-    df = pd.concat(DFS).sort_values(by=['chrom','start'])
+    df = pd.concat(DFS,sort=False).sort_values(by=['chrom','start'])
     
     #~~~ Fix NaNs
     if 'name' in df:
@@ -362,7 +461,7 @@ def generate_igv_session(prep_path,output_igv):
     gtf = './prep/input.gtf'
     resources,tracks = [],[]
     resources.append(template_resource.format(rel_resource=gtf))
-    tracks.append(template_track.format(rel_resource=gtf,name_resource='Gencode',color='0,0,255'))    
+    tracks.append(template_track.format(rel_resource=gtf,name_resource='GTF',color='0,0,255'))    
     folders = [x for x in listdir(prep_path) 
            if path.isdir(path.join(prep_path,x)) and x[0]!='.']
     for idx,folder in enumerate(sorted(folders)):
@@ -387,7 +486,9 @@ def generate_igv_session(prep_path,output_igv):
     print('# Wrote',output_igv) 
 
 def prepare(config_ini):
-    config, mode = load_config(config_ini)
+    ezconfig = EzConfig(config_ini)
+    config, mode = ezconfig.dict, ezconfig.mode
+    
     output_path = path.abspath(config['default']['output_path'])
     input_gtf = config['default']['input_gtf']
     prep_path = path.join(output_path,'prep')
@@ -426,7 +527,7 @@ def prepare(config_ini):
                                prep_gtf=prep_gtf,query_bed=query_bed)
         execute_calls([call1,call2])        
         if mode is Mode.TRANS_NOINTRONS:
-            offset_bed = create_relative_mapping_index(prep_path)
+            offset_bed = create_relative_mapping_index(prep_path,intron_fraction=config['default']['intron_fraction'])
             call_intersect = 'intersectBed -sorted -wb -a {input_bed} -b {query_bed} '
             call_intersect+= ' | awk \'BEGIN{{OFS=FS="\\t"}}{{printf $1FS$2-$NF-%dFS$3-$NF-%d;for(i=4;i<=NF-4;i++) printf FS$i;print ""}}\' > {output_bed}'%(offset_bed,offset_bed)
             index_bed = path.join(prep_path,'index.bed')
@@ -466,28 +567,28 @@ def prepare(config_ini):
 call_PGT = 'pyGenomeTracks --tracks {output_ini} --region {chr}:{view_start}-{view_end} --fontSize 12 --trackLabelFraction 0.2 --trackLabelHAlign left --width {width} --dpi {dpi} -o {output_img}'
 
 def draw(config_ini):
-    config, mode = load_config(config_ini)
-    #~~~
-    relative_mode = False
-    if 'transcript' in config['default'] and config.getboolean('default','relative',fallback=False):
-        relative_mode = True
-    #~~~
+    ezconfig = EzConfig(config_ini)
+    config, mode = ezconfig.dict, ezconfig.mode
+
     output_path = path.abspath(config['default']['output_path'])
     prep_path = path.join(output_path,'prep')
     prep_gtf = path.join(prep_path,'input.gtf')
     output_ini = path.join(output_path,'config.ini')
-    output_img = path.join(output_path, config['plot'].get('output_img','my_tracks.pdf'))
+    output_img = path.join(output_path, config['plot']['output_img'])
     empty_bed = path.join(prep_path,'empty.bed')
     output_command = path.join(output_path,'cmd_draw.sh')
     with open(empty_bed,'w') as f:
         pass
     
     #~~~Graphics parameters
-    gtf_title = config['plot'].get('gtf_title','Annotation')
-    padding = int(config['plot'].get('padding','100'))    
-    width = config['plot'].get('width','40')
-    dpi = config['plot'].get('dpi','100')
-    gtf_height = config['plot'].get('gtf_height','10')
+    str_track_bed = temp_track_bed.format(**config['template'])
+    str_track_grouplabel = temp_track_grouplabel.format(**config['template'])
+    str_track_line = temp_track_line.format(**config['template']) if config['template']['bedtrack_show_midline'] else '\n'
+    str_track_gtf = temp_track_gtf.format(gtf_input=prep_gtf, **config['plot'])
+    padding = config['plot']['padding']
+    width = config['plot']['width']
+    dpi = config['plot']['dpi']
+    
     
     #~~~Get plotting coordinates
     if mode is Mode.REGION:    
@@ -498,7 +599,7 @@ def draw(config_ini):
         end = int(region.split(':')[1].split('-')[1])
         view_start = start-padding
         view_end = end+padding
-    elif mode & (Mode.TRANS|Mode.TRANS_NOINTRONS):     
+    elif mode & (Mode.TRANS|Mode.TRANS_NOINTRONS):
         transcript = config['default']['transcript']                        
         df = pd.read_csv(prep_gtf,sep='\t',header=None)
         _chr = df.iloc[0][0]
@@ -509,13 +610,14 @@ def draw(config_ini):
     else:
         raise AttributeError("Invalid mode, please check configuration file.")
     #~~~ Generate HTML color list
-    cmap = plt.get_cmap('tab10')
-    colors = [matplotlib.colors.rgb2hex(cmap(i)[:3]) for i in range(cmap.N)]
+    cmap = plt.get_cmap(config['plot']['colormap_name'])
+    ncmap = config['plot']['colormap_count']
+    colors = [matplotlib.colors.rgb2hex(cmap(i)[:3]) for i in linspace(0,1,ncmap)]
     
     #~~~Create ini file (GTF)
     with open(output_ini,'w') as f:
-        f.write(str_track_gtf.format(gtf_input=prep_gtf,gtf_title=gtf_title,gtf_height=gtf_height))
-        if mode is Mode.TRANS_NOINTRONS:
+        f.write(str_track_gtf)
+        if mode is Mode.TRANS_NOINTRONS and config['template']['bedtrack_show_verticalline']:
             f.write("[vlines]\nfile = {file}\ntype = vlines\n".format(file=path.join(prep_path,'vertical.bed')))
     
     #~~~Add tracks to ini file
@@ -523,9 +625,11 @@ def draw(config_ini):
     track_count = 0
     with open(output_ini,'a') as f:
         for idx,(group,tracks) in enumerate(TRACKS.items()):
-            color = colors[idx%10]
+            color = colors[idx%ncmap]
             track_path = path.join(prep_path,group)
             if len(tracks) == 1: #Only one track in the group
+                if not config['plot']['color_per_group']:
+                    color = colors[track_count%ncmap]
                 filename = path.join(track_path,tracks[0][1]+'.bed')
                 if os.stat(filename).st_size == 0:
                     continue
@@ -534,15 +638,17 @@ def draw(config_ini):
                                         title=group))
                 f.write(str_track_line)
                 track_count+=1
-            else:
+            else:                
                 f.write(str_track_grouplabel.format(group=group,emptybed=empty_bed))
                 for track in sorted(tracks,key=lambda x:x[1].lower()):
+                    if not config['plot']['color_per_group']:
+                        color = colors[track_count%ncmap]
                     filename = path.join(track_path,track[1]+'.bed')                    
                     if os.stat(filename).st_size == 0:
                         continue
                     f.write(str_track_bed.format(group=group,color=color,
                                                  filename=filename,
-                                                 title=track[1]))
+                                                 title=track[1] if config['template']['bedtrack_show_name'] else ''))
                     f.write(str_track_line)
                     track_count+=1                    
     call = call_PGT.format(output_ini=output_ini,chr=_chr,view_start=view_start,view_end=view_end,
@@ -559,14 +665,13 @@ def draw(config_ini):
         f.write(S)
     print(S,file=sys.stderr)
 
-    
-    
 def main():
     parser = argparse.ArgumentParser(description='ezTracks. Plot a single GTF annotation followed by grouped bed files.\n\nHugo Guillen, 2020.')
     
-    parser.add_argument('action',choices=['check','prepare','draw'],help="""check: check if config file, environment, and input files are correct.
+    parser.add_argument('action',choices=['check','prepare','draw','create'],help="""check: check if config file, environment, and input files are correct.
 prepare: preprocess input files into output defined in config file.
-draw: generate output image into output defined in config file.""")
+draw: generate output image into output defined in config file.
+create: creates a configuration file with all default parameters.""")
     parser.add_argument('configfile',help="path to configuration file. For possible options, please refer to the example located at test_data/config.ini")
     if len(sys.argv) < 2:
         parser.print_help()
@@ -578,6 +683,9 @@ draw: generate output image into output defined in config file.""")
         prepare(args.configfile)
     elif args.action == 'draw':
         draw(args.configfile)
+    elif args.action == 'create':
+        EzConfig.write_config(args.configfile)
+        print('Configuration file created at',args.configfile)
     else:
         parser.print_help()
         

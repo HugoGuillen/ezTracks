@@ -1,0 +1,4 @@
+chr1	auto	exon	1001	1010	.	-	.	transcript_id "EST01"; transcript_name "transcript01(-)";
+chr1	auto	transcript	1001	1470	.	-	.	transcript_id "EST01"; transcript_name "transcript01(-)";
+chr1	auto	exon	1301	1320	.	-	.	transcript_id "EST01"; transcript_name "transcript01(-)";
+chr1	auto	exon	1401	1470	.	-	.	transcript_id "EST01"; transcript_name "transcript01(-)";
