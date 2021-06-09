@@ -179,7 +179,7 @@ class EzConfig:
         self.mode = self.get_mode()
         self.dict = self.to_dict()
     
-    def get(section,key):
+    def get(self,section,key):
         return self.dict[section][key]
         
     def get_mode(self):
