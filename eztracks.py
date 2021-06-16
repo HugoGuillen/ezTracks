@@ -118,7 +118,7 @@ def get_defaults():
     D['default']['intron_fraction']=0.2    
     #plot
     D['plot']['output_img']='my_tracks.pdf'
-    D['plot']['width']=20
+    D['plot']['width']=40
     D['plot']['padding']=10
     D['plot']['dpi']=100
     D['plot']['colormap_name']='tab10'
