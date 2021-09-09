@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import enum
 import math
 from numpy import linspace
+import shutil
 cmap = plt.cm.Dark2
 
 #~~~~~~~~HELPERS FOR BUILDING PYGT CONFIG FILE
@@ -100,7 +101,8 @@ template_main = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 class Mode(enum.Flag):
     REGION = enum.auto()
     TRANS = enum.auto()
-    TRANS_NOINTRONS = enum.auto()    
+    TRANS_NOINTRONS = enum.auto()
+    BED4 = enum.auto()
     ERROR = enum.auto()
     
 def get_defaults():
@@ -114,6 +116,7 @@ def get_defaults():
     D['default']['output_path']='.'
     D['default']['region']=''
     D['default']['transcript']=''
+    D['default']['bed4']=''
     D['default']['no_introns']=False
     D['default']['intron_fraction']=0.2    
     #plot
@@ -187,12 +190,13 @@ class EzConfig:
         if 'region' in config['default']:
             if config['default']['region']!='':
                 return Mode.REGION
-        transcript = 'transcript' in config['default']
-        no_introns = config.getboolean('default','no_introns',fallback=False)
-        if transcript and no_introns:
-            return Mode.TRANS_NOINTRONS
-        if transcript:
+        if 'transcript' in config['default']:        
+            no_introns = config.getboolean('default','no_introns',fallback=False)
+            if no_introns:
+                return Mode.TRANS_NOINTRONS        
             return Mode.TRANS
+        if 'bed4' in config['default']:
+            return Mode.BED4     
         return Mode.ERROR
     
     def parse(self,section,key):
@@ -284,7 +288,8 @@ def check(config_ini):
         return
     ezconfig = EzConfig(config_ini)
     config, mode = ezconfig.dict, ezconfig.mode
-    required_params = ['output_path','input_gtf']
+    #required_params = ['output_path','input_gtf']
+    required_params = ['output_path']
     for param in required_params:
         if param not in config['default']:
             print('ERROR: required parameter %s not found in configuration.'%param,file=sys.stderr)
@@ -294,12 +299,12 @@ def check(config_ini):
         errors+=1
     else:
         print('# MODE %s detected.'%mode,file=sys.stderr)
-    required_files = ['input_gtf']
-    for  _file in required_files:
-        filepath = config['default'][_file]
-        if not path.exists(filepath):
-            print('ERROR: required %s (%s) not found.'%(_file,filepath),file=sys.stderr)
-            errors+=1
+#     required_files = ['input_gtf']
+#     for  _file in required_files:
+#         filepath = config['default'][_file]
+#         if not path.exists(filepath):
+#             print('ERROR: required %s (%s) not found.'%(_file,filepath),file=sys.stderr)
+#             errors+=1
     
     #~~~Check track files
     tracks = OrderedDict()
@@ -517,7 +522,7 @@ def prepare(config_ini):
             print('# Wrote',query_bed,file=sys.stderr)    
         call = call_gtf.format(query_bed=query_bed,input_gtf=input_gtf,prep_gtf=prep_gtf)
         calls.append(call)
-    elif mode & (Mode.TRANS|Mode.TRANS_NOINTRONS):        
+    elif mode & (Mode.TRANS|Mode.TRANS_NOINTRONS):
         transcript = config['default']['transcript']
         call_gtf_search = '{compressed}grep {transcript} {gtf} | sort -k1,1 -k4,4n > {prep_gtf}'
         call1 = call_gtf_search.format(transcript=transcript,gtf=input_gtf,prep_gtf=prep_gtf,
@@ -538,6 +543,11 @@ def prepare(config_ini):
         reverse_mode = force_forward and TI['strand']=='-'
         reverse_script = path.join(path.dirname(os.path.abspath(__file__)),'reverseBed.sh')
         call_reverse = reverse_script+' -i {output_bed} -c %.1f > {output_bed}ff; mv {output_bed}ff {output_bed}'%TI['midpoint']
+    elif mode is Mode.BED4:
+        # Annotation in element name is inputfeature|||elementname
+        call_intersect = 'intersectBed -sorted -wb -a {input_bed} -b {query_bed} | awk \'BEGIN{{OFS=",";FS="\\t"}}{{for(i=1;i<=3;i++) printf $i FS ;printf $NF"|||"$4FS; for(i=5;i<=NF-4;i++) printf $i FS;print ""}}\' > {output_bed}'
+        config_bed = config['default']['bed4']
+        shutil.copy(config_bed,query_bed)        
     else:
         raise AttributeError("Invalid mode, please check configuration file.")
     TRACKS = load_tracks(config)
