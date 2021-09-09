@@ -190,13 +190,15 @@ class EzConfig:
         if 'region' in config['default']:
             if config['default']['region']!='':
                 return Mode.REGION
-        if 'transcript' in config['default']:        
-            no_introns = config.getboolean('default','no_introns',fallback=False)
-            if no_introns:
-                return Mode.TRANS_NOINTRONS        
-            return Mode.TRANS
+        if 'transcript' in config['default']:
+            if config['default']['transcript']!='':
+                no_introns = config.getboolean('default','no_introns',fallback=False)
+                if no_introns:
+                    return Mode.TRANS_NOINTRONS        
+                return Mode.TRANS
         if 'bed4' in config['default']:
-            return Mode.BED4     
+            if config['default']['bed4']!='':
+                return Mode.BED4
         return Mode.ERROR
     
     def parse(self,section,key):
