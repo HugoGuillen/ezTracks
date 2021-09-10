@@ -546,10 +546,11 @@ def prepare(config_ini):
         reverse_script = path.join(path.dirname(os.path.abspath(__file__)),'reverseBed.sh')
         call_reverse = reverse_script+' -i {output_bed} -c %.1f > {output_bed}ff; mv {output_bed}ff {output_bed}'%TI['midpoint']
     elif mode is Mode.BED4:
-        # Annotation in element name is inputfeature|||elementname
+        # Annotation in element name is inputfeature|||elementname        
         call_intersect = 'intersectBed -sorted -wb -a {input_bed} -b {query_bed} | awk \'BEGIN{{OFS=",";FS="\\t"}}{{for(i=1;i<=3;i++) printf $i FS ;printf $NF"|||"$4; for(i=5;i<=NF-4;i++) printf FS $i;print ""}}\' > {output_bed}'
         config_bed = config['default']['bed4']
-        shutil.copy(config_bed,query_bed)        
+        shutil.copy(config_bed,query_bed)
+        
     else:
         raise AttributeError("Invalid mode, please check configuration file.")
     TRACKS = load_tracks(config)
