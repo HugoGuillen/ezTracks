@@ -511,7 +511,7 @@ def prepare(config_ini):
             os.makedirs(folder)
             print('# Created dir %s'%folder,file=sys.stderr)
     calls = []
-    call_intersect = 'intersectBed -sorted -u -a {input_bed} -b {query_bed} > {output_bed}'
+    call_intersect = 'intersectBed -sorted -u -a {input_bed} -b {query_bed} | sort -k1,1 -k2,2n > {output_bed}'
     if mode is Mode.REGION:        
         call_gtf = 'intersectBed -sorted -u -a {input_gtf} -b {query_bed} | sort -k1,1 -k4,4n > {prep_gtf}'            
         region = config['default']['region']
@@ -547,7 +547,7 @@ def prepare(config_ini):
         call_reverse = reverse_script+' -i {output_bed} -c %.1f > {output_bed}ff; mv {output_bed}ff {output_bed}'%TI['midpoint']
     elif mode is Mode.BED4:
         # Annotation in element name is inputfeature|||elementname        
-        call_intersect = 'intersectBed -sorted -wb -a {input_bed} -b {query_bed} | awk \'BEGIN{{OFS=",";FS="\\t"}}{{for(i=1;i<=3;i++) printf $i FS ;printf $NF"|||"$4; for(i=5;i<=NF-4;i++) printf FS $i;print ""}}\' > {output_bed}'
+        call_intersect = 'intersectBed -sorted -wb -a {input_bed} -b {query_bed} | awk \'BEGIN{{OFS=",";FS="\\t"}}{{for(i=1;i<=3;i++) printf $i FS ;printf $NF"|||"$4; for(i=5;i<=NF-4;i++) printf FS $i;print ""}}\' | sort -k1,1 -k2,2n > {output_bed}'
         config_bed = config['default']['bed4']
         shutil.copy(config_bed,query_bed)
         
